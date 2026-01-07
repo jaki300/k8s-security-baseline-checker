@@ -47,3 +47,18 @@ Add more security checks (RBAC, HostPath, ImagePullPolicy)
         Namespace targeting
 
         Optional output saving for reporting or automation
+    This version will:
+
+            Correctly detect Kubernetes version
+
+            Detect nodes, ready status
+
+            Detect CNI (with fallback)
+
+            Properly show OK/WARN/CRITICAL
+
+            Provide a cluster health summary
+
+            Allow namespace targeting
+
+            Save CSV/text output for reporting

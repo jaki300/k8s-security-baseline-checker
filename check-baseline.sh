@@ -1,9 +1,10 @@
 #!/bin/bash
 
 # ================================
-# Kubernetes Security Baseline Checker v1.2
+# Kubernetes Security Baseline Checker v1.3
 # Features:
 # - Cluster overview (nodes, version, CNI, storage)
+# - Cluster health summary (Ready nodes, Pending/CrashLoop pods)
 # - Security checks (root pods, privileged, networkpolicy, SA, resource limits)
 # - Color-coded output
 # - Optional: target namespace(s)
@@ -19,6 +20,7 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 OUTPUT_FILE=""
+OUTPUT_FORMAT="text"
 NAMESPACE_ARG=""
 
 # -----------------------------
@@ -36,9 +38,14 @@ while [[ $# -gt 0 ]]; do
             shift
             shift
             ;;
+        -f|--format)
+            OUTPUT_FORMAT="$2"
+            shift
+            shift
+            ;;
         *)
             echo "Unknown argument: $1"
-            echo "Usage: $0 [-n|--namespace NAMESPACE] [-o|--output OUTPUT_FILE]"
+            echo "Usage: $0 [-n|--namespace NAMESPACE] [-o|--output OUTPUT_FILE] [-f|--format text|csv|json]"
             exit 1
             ;;
     esac
@@ -51,25 +58,41 @@ echo -e "${GREEN}Starting Kubernetes Security Baseline Checker...${NC}\n"
 # -----------------------------
 echo -e "${GREEN}Cluster Overview:${NC}"
 
-K8S_VERSION=$(kubectl version --short | grep Server | awk '{print $3}')
+# Kubernetes version
+K8S_VERSION=$(kubectl version -o json | jq -r '.serverVersion.gitVersion')
 echo -e "Kubernetes Version: $K8S_VERSION"
 
+# Nodes info
 echo "Nodes:"
-kubectl get nodes -o custom-columns=NAME:.metadata.name,STATUS:.status.conditions[-1].type,ROLES:.metadata.labels.kubernetes\\.io/role,VERSION:.status.nodeInfo.kubeletVersion --no-headers | while read name status roles version; do
-    if [[ $status == "Ready" ]]; then
-        echo -e "${GREEN}✔ $name - $status ($roles, $version)${NC}"
+kubectl get nodes -o json | jq -r '.items[] |
+    .metadata.name as $name |
+    .status.conditions[] | select(.type=="Ready") |
+    "\($name) - \(.status)"' | while read line; do
+    if [[ $line == *"True"* ]]; then
+        echo -e "${GREEN}✔ $line${NC}"
     else
-        echo -e "${RED}❌ $name - $status ($roles, $version)${NC}"
+        echo -e "${RED}❌ $line${NC}"
     fi
 done
 
-# Networking plugin
-CNI=$(kubectl get pods -n kube-system -l k8s-app -o jsonpath='{.items[*].metadata.name}' | grep -E "calico|flannel|cilium|weave" || echo "Unknown")
+# Networking plugin (CNI)
+CNI=$(kubectl get ds -n kube-system -o jsonpath='{.items[*].metadata.name}' | grep -E "calico|flannel|cilium|weave" || echo "Unknown")
 echo -e "Networking Plugin(s): $CNI"
 
 # Storage classes
 SC=$(kubectl get sc -o jsonpath='{.items[*].metadata.name}')
 echo -e "Storage Classes: $SC"
+
+# -----------------------------
+# Cluster Health Summary
+# -----------------------------
+TOTAL_NODES=$(kubectl get nodes --no-headers | wc -l)
+READY_NODES=$(kubectl get nodes --no-headers | grep Ready | wc -l)
+PENDING_PODS=$(kubectl get pods --all-namespaces --field-selector=status.phase=Pending --no-headers | wc -l)
+CRASHLOOP_PODS=$(kubectl get pods --all-namespaces -o json | jq '[.items[] | select(.status.containerStatuses[]? | .state.waiting.reason=="CrashLoopBackOff")] | length')
+echo -e "\n${GREEN}Cluster Health Summary:${NC}"
+echo -e "Nodes Ready: $READY_NODES/$TOTAL_NODES"
+echo -e "Pending Pods: $PENDING_PODS, CrashLoopBackOff Pods: $CRASHLOOP_PODS"
 
 # -----------------------------
 # Security Baseline Checks
@@ -83,65 +106,80 @@ else
 fi
 
 RESULTS=""
+CSV_HEADER="Namespace,Pod,Check,Status,Message"
+if [[ "$OUTPUT_FORMAT" == "csv" && -n "$OUTPUT_FILE" ]]; then
+    echo "$CSV_HEADER" > "$OUTPUT_FILE"
+fi
 
 for ns in $NAMESPACES; do
     PODS=$(kubectl get pods -n $ns -o json)
+    OK_FLAG=true
 
     # 1. Pods running as root
-    ROOT_PODS=$(echo "$PODS" | jq -r '.items[] | select(.spec.containers[]?.securityContext.runAsNonRoot == false or .spec.containers[]?.securityContext.runAsUser == 0) | "[CRITICAL] Namespace '$ns': Pod \(.metadata.name) running as root"')
-    if [[ -n "$ROOT_PODS" ]]; then
-        while read line; do
-            echo -e "${RED}❌ $line${NC}"
-            RESULTS+="$line"$'\n'
-        done <<< "$ROOT_PODS"
-    fi
+    ROOT_PODS=$(echo "$PODS" | jq -r '.items[] | select(.spec.containers[]?.securityContext.runAsNonRoot == false or .spec.containers[]?.securityContext.runAsUser == 0) | .metadata.name')
+    for pod in $ROOT_PODS; do
+        msg="[CRITICAL] Namespace $ns: Pod $pod running as root"
+        echo -e "${RED}❌ $msg${NC}"
+        OK_FLAG=false
+        RESULTS+="$msg"$'\n'
+        if [[ "$OUTPUT_FORMAT" == "csv" && -n "$OUTPUT_FILE" ]]; then
+            echo "$ns,$pod,RunningAsRoot,CRITICAL,$msg" >> "$OUTPUT_FILE"
+        fi
+    done
 
     # 2. Privileged containers
-    PRIV_PODS=$(echo "$PODS" | jq -r '.items[] | select(.spec.containers[]?.securityContext.privileged == true) | "[CRITICAL] Namespace '$ns': Pod \(.metadata.name) running privileged"')
-    if [[ -n "$PRIV_PODS" ]]; then
-        while read line; do
-            echo -e "${RED}❌ $line${NC}"
-            RESULTS+="$line"$'\n'
-        done <<< "$PRIV_PODS"
-    fi
+    PRIV_PODS=$(echo "$PODS" | jq -r '.items[] | select(.spec.containers[]?.securityContext.privileged == true) | .metadata.name')
+    for pod in $PRIV_PODS; do
+        msg="[CRITICAL] Namespace $ns: Pod $pod running privileged"
+        echo -e "${RED}❌ $msg${NC}"
+        OK_FLAG=false
+        RESULTS+="$msg"$'\n'
+        [[ "$OUTPUT_FORMAT" == "csv" && -n "$OUTPUT_FILE" ]] && echo "$ns,$pod,Privileged,CRITICAL,$msg" >> "$OUTPUT_FILE"
+    done
 
     # 3. Missing NetworkPolicies
     NETPOL=$(kubectl get netpol -n $ns --no-headers 2>/dev/null | wc -l)
     if [ "$NETPOL" -eq 0 ]; then
-        echo -e "${YELLOW}⚠️ [WARN] Namespace $ns: No NetworkPolicy found${NC}"
-        RESULTS+="[WARN] Namespace $ns: No NetworkPolicy found"$'\n'
+        msg="[WARN] Namespace $ns: No NetworkPolicy found"
+        echo -e "${YELLOW}⚠️ $msg${NC}"
+        OK_FLAG=false
+        RESULTS+="$msg"$'\n'
+        [[ "$OUTPUT_FORMAT" == "csv" && -n "$OUTPUT_FILE" ]] && echo "$ns,,NetworkPolicy,WARN,$msg" >> "$OUTPUT_FILE"
     fi
 
     # 4. Default ServiceAccount
-    DEF_SA=$(echo "$PODS" | jq -r '.items[] | select(.spec.serviceAccountName=="default") | "[WARN] Namespace '$ns': Pod \(.metadata.name) uses default SA"')
-    if [[ -n "$DEF_SA" ]]; then
-        while read line; do
-            echo -e "${YELLOW}⚠️ $line${NC}"
-            RESULTS+="$line"$'\n'
-        done <<< "$DEF_SA"
-    fi
+    DEF_SA=$(echo "$PODS" | jq -r '.items[] | select(.spec.serviceAccountName=="default") | .metadata.name')
+    for pod in $DEF_SA; do
+        msg="[WARN] Namespace $ns: Pod $pod uses default SA"
+        echo -e "${YELLOW}⚠️ $msg${NC}"
+        OK_FLAG=false
+        RESULTS+="$msg"$'\n'
+        [[ "$OUTPUT_FORMAT" == "csv" && -n "$OUTPUT_FILE" ]] && echo "$ns,$pod,DefaultSA,WARN,$msg" >> "$OUTPUT_FILE"
+    done
 
     # 5. Resource limits
-    NO_LIMITS=$(echo "$PODS" | jq -r '.items[] | select(.spec.containers[]?.resources.limits == null) | "[WARN] Namespace '$ns': Pod \(.metadata.name) has no resource limits"')
-    if [[ -n "$NO_LIMITS" ]]; then
-        while read line; do
-            echo -e "${YELLOW}⚠️ $line${NC}"
-            RESULTS+="$line"$'\n'
-        done <<< "$NO_LIMITS"
-    fi
+    NO_LIMITS=$(echo "$PODS" | jq -r '.items[] | select(.spec.containers[]?.resources.limits == null) | .metadata.name')
+    for pod in $NO_LIMITS; do
+        msg="[WARN] Namespace $ns: Pod $pod has no resource limits"
+        echo -e "${YELLOW}⚠️ $msg${NC}"
+        OK_FLAG=false
+        RESULTS+="$msg"$'\n'
+        [[ "$OUTPUT_FORMAT" == "csv" && -n "$OUTPUT_FILE" ]] && echo "$ns,$pod,ResourceLimits,WARN,$msg" >> "$OUTPUT_FILE"
+    done
 
-    # 6. All good
-    OK_CHECK=$(echo "$PODS" | jq -r '.items[] | select((.spec.containers[]?.securityContext.runAsNonRoot != false) and (.spec.containers[]?.securityContext.privileged != true) and (.spec.containers[]?.resources.limits != null)) | "[OK] Namespace '$ns': Pod \(.metadata.name) compliant"' | wc -l)
-    if [ "$OK_CHECK" -gt 0 ]; then
-        echo -e "${GREEN}✅ Namespace $ns: All checked pods compliant${NC}"
-        RESULTS+="Namespace $ns: All checked pods compliant"$'\n'
+    # ✅ All good
+    if [ "$OK_FLAG" = true ]; then
+        msg="Namespace $ns: All checked pods compliant"
+        echo -e "${GREEN}✅ $msg${NC}"
+        RESULTS+="$msg"$'\n'
+        [[ "$OUTPUT_FORMAT" == "csv" && -n "$OUTPUT_FILE" ]] && echo "$ns,,Compliant,OK,$msg" >> "$OUTPUT_FILE"
     fi
 done
 
 # -----------------------------
-# Save output if requested
+# Save output to file
 # -----------------------------
-if [[ -n "$OUTPUT_FILE" ]]; then
+if [[ -n "$OUTPUT_FILE" && "$OUTPUT_FORMAT" != "csv" ]]; then
     echo "$RESULTS" > "$OUTPUT_FILE"
     echo -e "\n${GREEN}Output saved to $OUTPUT_FILE${NC}"
 fi
