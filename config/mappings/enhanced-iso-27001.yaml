@@ -1,0 +1,69 @@
+framework: ISO27001
+version: "ISO/IEC 27001:2022"
+metadata:
+  name: "ISO/IEC 27001:2022"
+  description: "Information security management systems - Requirements"
+  scoring:
+    method: severity_weighted
+    weighted_by_category: false
+    minimum_compliance_score: 75.0
+
+mappings:
+  # A.9.2.1 maps to multiple checks
+  - control_id: "A.9.2.1"
+    control_name: "User registration and de-registration"
+    description: "A formal user registration and de-registration process shall be implemented to enable assignment of access rights."
+    category: "Access Control"
+    check_ids:
+      - "cis-1.1.1"  # RBAC wildcard
+      - "cis-2.2.2"  # Default ServiceAccount
+    weight: 1.0
+    mapping_rule:
+      pass_status: COMPLIANT
+      fail_status: NON_COMPLIANT
+      warn_status: PARTIAL
+      requires_evidence: true
+
+  # A.9.4.2 maps to pod security checks
+  - control_id: "A.9.4.2"
+    control_name: "Secure log-on procedures"
+    description: "Where required by the access control policy, access to systems and applications shall be controlled by a secure log-on procedure."
+    category: "Access Control"
+    check_ids:
+      - "cis-2.1.1"  # Pods non-root
+      - "cis-2.1.2"  # Privileged containers
+    weight: 1.0
+    mapping_rule:
+      pass_status: COMPLIANT
+      fail_status: NON_COMPLIANT
+      warn_status: PARTIAL
+      requires_evidence: true
+
+  # A.13.1.1 maps to network security
+  - control_id: "A.13.1.1"
+    control_name: "Network controls"
+    description: "Networks shall be managed and controlled to protect information in systems and applications."
+    category: "Communications Security"
+    check_ids:
+      - "cis-4.1.1"  # NetworkPolicies
+    weight: 1.0
+    mapping_rule:
+      pass_status: COMPLIANT
+      fail_status: NON_COMPLIANT
+      warn_status: PARTIAL
+      requires_evidence: true
+
+  # A.12.2.1 maps to security configuration
+  - control_id: "A.12.2.1"
+    control_name: "Controls against malicious code"
+    description: "Detection, prevention and recovery controls to protect against malicious code shall be implemented."
+    category: "Operations Security"
+    check_ids:
+      - "cis-2.1.3"  # HostPath volumes
+      - "cis-2.1.6"  # Capabilities
+    weight: 1.0
+    mapping_rule:
+      pass_status: COMPLIANT
+      fail_status: NON_COMPLIANT
+      warn_status: PARTIAL
+      requires_evidence: true

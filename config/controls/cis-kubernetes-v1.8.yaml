@@ -1,0 +1,256 @@
+id: cis-kubernetes-v1.8
+name: CIS Kubernetes Benchmark v1.8
+description: Center for Internet Security Kubernetes Benchmark v1.8 - Production-ready controls
+version: "1.8"
+framework: CIS
+controls:
+  # Section 1: Control Plane Components
+  # 1.1 API Server
+  - id: "cis-1.1.1"
+    name: "Ensure that the API server pod specification file has permissions set to 644 or more restrictive"
+    description: "API server pod specification files contain sensitive parameters that define the behavior of the API server. Restrict file permissions to prevent unauthorized modification."
+    category: "Control Plane - API Server"
+    severity: CRITICAL
+    checker_id: "check-apiserver-permissions"
+    metadata:
+      cis_control: "1.1.1"
+      remediation: "Run: chmod 644 /etc/kubernetes/manifests/kube-apiserver.yaml"
+  
+  - id: "cis-1.1.20"
+    name: "Ensure that the --encryption-provider-config argument is set as appropriate"
+    description: "etcd is a highly available key-value store used by Kubernetes deployments for persistent storage of all REST API objects. These objects are sensitive in nature and should be encrypted at rest."
+    category: "Control Plane - API Server"
+    severity: CRITICAL
+    checker_id: "check-etcd-encryption"
+    metadata:
+      cis_control: "1.1.20"
+      remediation: "Set --encryption-provider-config flag to point to encryption configuration file"
+  
+  - id: "cis-1.2.1"
+    name: "Ensure that the --anonymous-auth argument is set to false"
+    description: "When enabled, requests that are not rejected by other configured authentication methods are treated as anonymous requests. These requests are then served by the API server."
+    category: "Control Plane - API Server"
+    severity: CRITICAL
+    checker_id: "check-apiserver-flags"
+    metadata:
+      cis_control: "1.2.1"
+      remediation: "Edit the API server pod specification file and set --anonymous-auth=false"
+  
+  - id: "cis-1.2.2"
+    name: "Ensure that the --authorization-mode argument is not set to AlwaysAllow"
+    description: "Kubernetes access control should be configured to use an authorization mode other than AlwaysAllow."
+    category: "Control Plane - API Server"
+    severity: CRITICAL
+    checker_id: "check-apiserver-flags"
+    metadata:
+      cis_control: "1.2.2"
+      remediation: "Edit the API server pod specification file and set --authorization-mode to Node,RBAC"
+  
+  - id: "cis-1.2.3"
+    name: "Ensure that the --authorization-mode argument includes Node"
+    description: "Node authorization mode allows kubelets to read services, endpoints, nodes, pods, secrets, configmaps, persistent volume claims and persistent volumes related to their node."
+    category: "Control Plane - API Server"
+    severity: CRITICAL
+    checker_id: "check-apiserver-flags"
+    metadata:
+      cis_control: "1.2.3"
+      remediation: "Edit the API server pod specification file and ensure --authorization-mode includes Node"
+  
+  - id: "cis-1.2.4"
+    name: "Ensure that the --authorization-mode argument includes RBAC"
+    description: "RBAC allows fine-grained control over operations that can be performed on cluster resources."
+    category: "Control Plane - API Server"
+    severity: CRITICAL
+    checker_id: "check-apiserver-flags"
+    metadata:
+      cis_control: "1.2.4"
+      remediation: "Edit the API server pod specification file and ensure --authorization-mode includes RBAC"
+  
+  - id: "cis-1.2.5"
+    name: "Ensure that the --audit-log-maxage argument is set to 30 or as appropriate"
+    description: "Retaining logs for an extended period of time ensures that adequate log data is available for forensic analysis in the event of a security incident."
+    category: "Control Plane - API Server"
+    severity: HIGH
+    checker_id: "check-apiserver-flags"
+    metadata:
+      cis_control: "1.2.5"
+      remediation: "Edit the API server pod specification file and set --audit-log-maxage=30"
+  
+  - id: "cis-1.2.6"
+    name: "Ensure that the --audit-log-maxbackup argument is set to 10 or as appropriate"
+    description: "Retaining logs for an extended period of time ensures that adequate log data is available for forensic analysis."
+    category: "Control Plane - API Server"
+    severity: HIGH
+    checker_id: "check-apiserver-flags"
+    metadata:
+      cis_control: "1.2.6"
+      remediation: "Edit the API server pod specification file and set --audit-log-maxbackup=10"
+  
+  - id: "cis-1.2.7"
+    name: "Ensure that the --audit-log-maxsize argument is set to 100 or as appropriate"
+    description: "Retaining logs for an extended period of time ensures that adequate log data is available for forensic analysis."
+    category: "Control Plane - API Server"
+    severity: HIGH
+    checker_id: "check-apiserver-flags"
+    metadata:
+      cis_control: "1.2.7"
+      remediation: "Edit the API server pod specification file and set --audit-log-maxsize=100"
+  
+  - id: "cis-1.2.8"
+    name: "Ensure that the --request-timeout argument is set as appropriate"
+    description: "Setting global request timeout allows extending the API server request timeout limit to a duration appropriate to each use-case."
+    category: "Control Plane - API Server"
+    severity: MEDIUM
+    checker_id: "check-apiserver-flags"
+    metadata:
+      cis_control: "1.2.8"
+      remediation: "Edit the API server pod specification file and set --request-timeout=300s"
+  
+  - id: "cis-1.2.9"
+    name: "Ensure that the --service-account-lookup argument is set to true"
+    description: "If --service-account-lookup is not enabled, the apiserver only verifies that the authentication token is valid, but does not validate that the service account token mentioned in the request actually exists in etcd."
+    category: "Control Plane - API Server"
+    severity: HIGH
+    checker_id: "check-apiserver-flags"
+    metadata:
+      cis_control: "1.2.9"
+      remediation: "Edit the API server pod specification file and set --service-account-lookup=true"
+  
+  - id: "cis-1.2.10"
+    name: "Ensure that the --enable-bootstrap-token-auth argument is set to false"
+    description: "Bootstrap tokens are used for initializing a cluster. Once the cluster is initialized, bootstrap tokens should be disabled."
+    category: "Control Plane - API Server"
+    severity: HIGH
+    checker_id: "check-apiserver-flags"
+    metadata:
+      cis_control: "1.2.10"
+      remediation: "Edit the API server pod specification file and set --enable-bootstrap-token-auth=false"
+  
+  - id: "cis-1.2.11"
+    name: "Ensure that the --tls-cipher-suites argument is set to strong cipher suites"
+    description: "Weak cipher suites can be exploited to compromise the security of the API server."
+    category: "Control Plane - API Server"
+    severity: HIGH
+    checker_id: "check-apiserver-flags"
+    metadata:
+      cis_control: "1.2.11"
+      remediation: "Edit the API server pod specification file and set --tls-cipher-suites to strong cipher suites"
+  
+  - id: "cis-1.2.12"
+    name: "Ensure that the --tls-min-version argument is set to VersionTLS12 or higher"
+    description: "TLS versions below 1.2 are vulnerable to known attacks."
+    category: "Control Plane - API Server"
+    severity: HIGH
+    checker_id: "check-apiserver-flags"
+    metadata:
+      cis_control: "1.2.12"
+      remediation: "Edit the API server pod specification file and set --tls-min-version=VersionTLS12"
+  
+  # 1.1 RBAC
+  - id: "cis-1.1.1"
+    name: "Ensure that the cluster-admin role is only used where required"
+    description: "The cluster-admin role provides super-user access to a cluster. Any user or service account with this role can perform any action on any resource in the cluster."
+    category: "Control Plane - RBAC"
+    severity: CRITICAL
+    checker_id: "check-rbac-misconfigurations"
+    metadata:
+      cis_control: "1.1.1"
+      remediation: "Review all cluster-admin bindings and remove unnecessary ones"
+  
+  - id: "cis-1.1.8"
+    name: "Ensure that Service Account Tokens are only mounted where necessary"
+    description: "Service account tokens should not be mounted in pods except where the workload running in the pod explicitly needs to communicate with the API server."
+    category: "Control Plane - RBAC"
+    severity: HIGH
+    checker_id: "check-serviceaccount-permissions"
+    metadata:
+      cis_control: "1.1.8"
+      remediation: "Review ServiceAccount usage and remove unnecessary token mounts"
+  
+  # Section 4: Network Policies and CNI
+  - id: "cis-4.1.1"
+    name: "Ensure that all Namespaces have Network Policies defined"
+    description: "Network Policies are a means of enforcing network segmentation and restricting traffic between pods. By default, all pods in a namespace can communicate with all other pods in all namespaces."
+    category: "Network Policies and CNI"
+    severity: HIGH
+    checker_id: "check-namespace-isolation"
+    metadata:
+      cis_control: "4.1.1"
+      remediation: "Create default-deny NetworkPolicies for all namespaces"
+  
+  - id: "cis-4.1.2"
+    name: "Ensure that all pods have Network Policies defined"
+    description: "Network Policies should be defined for all pods to ensure network segmentation and restrict traffic."
+    category: "Network Policies and CNI"
+    severity: HIGH
+    checker_id: "check-networkpolicy-coverage"
+    metadata:
+      cis_control: "4.1.2"
+      remediation: "Create NetworkPolicies to cover all pods in the cluster"
+  
+  # Section 5: Pod Security Standards
+  - id: "cis-5.2.1"
+    name: "Ensure that Namespaces are created with Pod Security Standards enabled"
+    description: "Pod Security Standards provide a way to enforce security policies at the namespace level. This helps prevent insecure pod configurations."
+    category: "Pod Security Standards"
+    severity: HIGH
+    checker_id: "check-pod-security-standards"
+    metadata:
+      cis_control: "5.2.1"
+      remediation: "Add pod-security.kubernetes.io/enforce label to namespaces with value 'restricted' or 'baseline'"
+  
+  - id: "cis-5.2.2"
+    name: "Ensure that Pod Security Standards are enforced"
+    description: "Pod Security Standards should be enforced to prevent insecure pod configurations from being created."
+    category: "Pod Security Standards"
+    severity: HIGH
+    checker_id: "check-pod-security-policy"
+    metadata:
+      cis_control: "5.2.2"
+      remediation: "Ensure Pod Security Standards are properly configured and enforced"
+  
+  # Section 2: Pod Security (existing checks)
+  - id: "cis-2.1.1"
+    name: "Ensure that the --anonymous-auth argument is set to false"
+    description: "When enabled, requests that are not rejected by other configured authentication methods are treated as anonymous requests."
+    category: "Pod Security"
+    severity: CRITICAL
+    checker_id: "check-pods-nonroot"
+    metadata:
+      cis_control: "2.1.1"
+      remediation: "Set securityContext.runAsNonRoot=true for all containers"
+  
+  - id: "cis-2.1.2"
+    name: "Ensure that containers are not run as privileged"
+    description: "Privileged containers have access to all Linux kernel capabilities and devices."
+    category: "Pod Security"
+    severity: CRITICAL
+    checker_id: "check-pods-privileged"
+    metadata:
+      cis_control: "2.1.2"
+      remediation: "Set securityContext.privileged=false in all pod specs"
+  
+  - id: "cis-2.1.3"
+    name: "Ensure that hostPath volumes are not used"
+    description: "hostPath volumes mount a file or directory from the host node's filesystem into your pod."
+    category: "Pod Security"
+    severity: CRITICAL
+    checker_id: "check-pods-hostpath"
+    metadata:
+      cis_control: "2.1.3"
+      remediation: "Avoid using hostPath volumes unless absolutely necessary"
+  
+  - id: "cis-2.2.1"
+    name: "Ensure that the default service account is not used"
+    description: "The default service account should not be used to ensure that service accounts are properly scoped."
+    category: "Pod Security"
+    severity: HIGH
+    checker_id: "check-pods-default-sa"
+    metadata:
+      cis_control: "2.2.1"
+      remediation: "Use dedicated ServiceAccounts for each application"
+
+metadata:
+  source: "CIS Kubernetes Benchmark v1.8"
+  last_updated: "2024-01-01"
+  version: "1.8"

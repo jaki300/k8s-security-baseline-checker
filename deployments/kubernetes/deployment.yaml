@@ -1,0 +1,121 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8s-checker-server
+  namespace: k8s-checker
+  labels:
+    app: k8s-checker-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: k8s-checker-server
+  template:
+    metadata:
+      labels:
+        app: k8s-checker-server
+    spec:
+      serviceAccountName: k8s-checker
+      containers:
+      - name: server
+        image: k8s-checker:latest
+        imagePullPolicy: IfNotPresent
+        command: ["./k8s-checker-server", "--port", "8080", "--address", "0.0.0.0"]
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: K8S_CHECKER_BENCHMARK_DIR
+          value: "/app/benchmarks"
+        - name: K8S_CHECKER_OUTPUT_DIR
+          value: "/app/reports"
+        volumeMounts:
+        - name: benchmarks
+          mountPath: /app/benchmarks
+          readOnly: true
+        - name: reports
+          mountPath: /app/reports
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+      volumes:
+      - name: benchmarks
+        configMap:
+          name: k8s-checker-benchmarks
+      - name: reports
+        emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8s-checker-server
+  namespace: k8s-checker
+spec:
+  selector:
+    app: k8s-checker-server
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8s-checker
+  namespace: k8s-checker
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: k8s-checker
+rules:
+- apiGroups: [""]
+  resources: ["*"]
+  verbs: ["get", "list"]
+- apiGroups: ["apps"]
+  resources: ["*"]
+  verbs: ["get", "list"]
+- apiGroups: ["rbac.authorization.k8s.io"]
+  resources: ["*"]
+  verbs: ["get", "list"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k8s-checker
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8s-checker
+subjects:
+- kind: ServiceAccount
+  name: k8s-checker
+  namespace: k8s-checker
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: k8s-checker
+

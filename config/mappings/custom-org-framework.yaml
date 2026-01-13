@@ -1,0 +1,116 @@
+# Example: Custom Organizational Framework
+# This demonstrates how organizations can create their own compliance frameworks
+# without modifying code - just add a YAML file!
+
+framework: CustomOrgSecurity
+version: "1.0"
+metadata:
+  name: "Custom Organization Security Framework"
+  description: "Organization-specific security controls based on internal policies and risk assessment"
+  scoring:
+    method: weighted_average
+    weighted_by_category: true
+    minimum_compliance_score: 90.0  # Higher threshold for custom framework
+    category_weights:
+      "Critical Security": 2.0
+      "High Security": 1.5
+      "Medium Security": 1.0
+      "Low Security": 0.5
+
+mappings:
+  # Critical security controls with high weight
+  - control_id: "ORG-CRIT-001"
+    control_name: "Prevent Root Access"
+    description: "All containers must run as non-root users. This is a critical security requirement."
+    category: "Critical Security"
+    check_ids:
+      - "cis-2.1.1"  # Pods non-root
+    weight: 2.0
+    mapping_rule:
+      pass_status: COMPLIANT
+      fail_status: NON_COMPLIANT
+      warn_status: NON_COMPLIANT  # Warnings treated as non-compliant for critical controls
+      requires_evidence: true
+
+  - control_id: "ORG-CRIT-002"
+    control_name: "Prevent Privilege Escalation"
+    description: "Containers must not allow privilege escalation or run in privileged mode."
+    category: "Critical Security"
+    check_ids:
+      - "cis-2.1.2"  # Privileged containers
+      - "cis-2.1.8"  # Privilege escalation
+    weight: 2.0
+    mapping_rule:
+      pass_status: COMPLIANT
+      fail_status: NON_COMPLIANT
+      warn_status: NON_COMPLIANT
+      requires_evidence: true
+
+  # High security controls
+  - control_id: "ORG-HIGH-001"
+    control_name: "Network Segmentation"
+    description: "All namespaces must have NetworkPolicies for network segmentation."
+    category: "High Security"
+    check_ids:
+      - "cis-4.1.1"  # NetworkPolicies
+    weight: 1.5
+    mapping_rule:
+      pass_status: COMPLIANT
+      fail_status: NON_COMPLIANT
+      warn_status: PARTIAL
+      requires_evidence: true
+
+  - control_id: "ORG-HIGH-002"
+    control_name: "RBAC Enforcement"
+    description: "RBAC must be properly configured without wildcard privileges."
+    category: "High Security"
+    check_ids:
+      - "cis-1.1.1"  # RBAC wildcard
+    weight: 1.5
+    mapping_rule:
+      pass_status: COMPLIANT
+      fail_status: NON_COMPLIANT
+      warn_status: PARTIAL
+      requires_evidence: true
+
+  # Medium security controls
+  - control_id: "ORG-MED-001"
+    control_name: "Resource Management"
+    description: "All containers must have resource limits defined."
+    category: "Medium Security"
+    check_ids:
+      - "cis-2.2.1"  # Resource limits
+    weight: 1.0
+    mapping_rule:
+      pass_status: COMPLIANT
+      fail_status: NON_COMPLIANT
+      warn_status: PARTIAL
+      requires_evidence: true
+
+  - control_id: "ORG-MED-002"
+    control_name: "Service Account Management"
+    description: "Pods should use dedicated ServiceAccounts instead of default."
+    category: "Medium Security"
+    check_ids:
+      - "cis-2.2.2"  # Default ServiceAccount
+    weight: 1.0
+    mapping_rule:
+      pass_status: COMPLIANT
+      fail_status: NON_COMPLIANT
+      warn_status: PARTIAL
+      requires_evidence: true
+
+  # Low security controls
+  - control_id: "ORG-LOW-001"
+    control_name: "Health Monitoring"
+    description: "Containers should have health probes configured for monitoring."
+    category: "Low Security"
+    check_ids:
+      - "cis-2.2.3"  # Liveness probes
+      - "cis-2.2.4"  # Readiness probes
+    weight: 0.5
+    mapping_rule:
+      pass_status: COMPLIANT
+      fail_status: NON_COMPLIANT
+      warn_status: PARTIAL
+      requires_evidence: true
