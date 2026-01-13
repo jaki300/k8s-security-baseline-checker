@@ -1,0 +1,130 @@
+id: soc2-kubernetes
+name: SOC 2 Kubernetes Compliance Benchmark
+version: "1.0"
+description: SOC 2 Type II compliance checks for Kubernetes based on Trust Services Criteria
+framework: SOC2
+checks:
+  - id: "soc2-cc6.1"
+    description: "Ensure pods do not run as root (SOC 2 CC6.1 - Logical Access)"
+    severity: CRITICAL
+    type: check_pods_nonroot
+    weight: 3
+    remediation: "Set securityContext.runAsNonRoot=true to enforce logical access controls."
+    category: "Access Control"
+    framework: SOC2
+    version: "1.0"
+  
+  - id: "soc2-cc6.2"
+    description: "Ensure no privileged containers (SOC 2 CC6.2 - Logical Access)"
+    severity: CRITICAL
+    type: check_pods_privileged
+    weight: 3
+    remediation: "Set securityContext.privileged=false to restrict logical access to system resources."
+    category: "Access Control"
+    framework: SOC2
+    version: "1.0"
+  
+  - id: "soc2-cc6.3"
+    description: "Ensure RBAC is properly configured (SOC 2 CC6.3 - Logical Access)"
+    severity: CRITICAL
+    type: check_rbac
+    weight: 3
+    remediation: "Implement role-based access controls to ensure proper authorization and segregation of duties."
+    category: "Access Control"
+    framework: SOC2
+    version: "1.0"
+  
+  - id: "soc2-cc6.4"
+    description: "Ensure containers do not allow privilege escalation (SOC 2 CC6.4 - Logical Access)"
+    severity: CRITICAL
+    type: check_allow_privilege_escalation
+    weight: 3
+    remediation: "Set securityContext.allowPrivilegeEscalation=false to prevent unauthorized privilege escalation."
+    category: "Access Control"
+    framework: SOC2
+    version: "1.0"
+  
+  - id: "soc2-cc7.1"
+    description: "Ensure NetworkPolicies are configured (SOC 2 CC7.1 - System Operations)"
+    severity: HIGH
+    type: check_namespaces_networkpolicy
+    weight: 2
+    remediation: "Implement network segmentation to protect system boundaries and prevent unauthorized access."
+    category: "Network Security"
+    framework: SOC2
+    version: "1.0"
+  
+  - id: "soc2-cc7.2"
+    description: "Ensure resource limits are set (SOC 2 CC7.2 - System Operations)"
+    severity: HIGH
+    type: check_pods_resource_limits
+    weight: 2
+    remediation: "Define resource limits to ensure system availability and prevent resource exhaustion."
+    category: "System Operations"
+    framework: SOC2
+    version: "1.0"
+  
+  - id: "soc2-cc7.3"
+    description: "Ensure containers have liveness probes (SOC 2 CC7.3 - System Operations)"
+    severity: MEDIUM
+    type: check_liveness_probe
+    weight: 1
+    remediation: "Configure liveness probes to monitor system operations and ensure availability."
+    category: "System Operations"
+    framework: SOC2
+    version: "1.0"
+  
+  - id: "soc2-cc7.4"
+    description: "Ensure containers have readiness probes (SOC 2 CC7.4 - System Operations)"
+    severity: MEDIUM
+    type: check_readiness_probe
+    weight: 1
+    remediation: "Configure readiness probes to ensure proper system operations and availability."
+    category: "System Operations"
+    framework: SOC2
+    version: "1.0"
+  
+  - id: "soc2-cc6.5"
+    description: "Ensure default ServiceAccount is not used (SOC 2 CC6.5 - Logical Access)"
+    severity: HIGH
+    type: check_pods_default_sa
+    weight: 2
+    remediation: "Use dedicated ServiceAccounts with unique identifiers for proper access tracking."
+    category: "Access Control"
+    framework: SOC2
+    version: "1.0"
+  
+  - id: "soc2-cc6.6"
+    description: "Ensure containers drop unnecessary capabilities (SOC 2 CC6.6 - Logical Access)"
+    severity: HIGH
+    type: check_capabilities
+    weight: 2
+    remediation: "Drop ALL capabilities to enforce least privilege and minimize attack surface."
+    category: "Access Control"
+    framework: SOC2
+    version: "1.0"
+  
+  - id: "soc2-cc6.7"
+    description: "Ensure secrets are not exposed via environment variables (SOC 2 CC6.7 - Logical Access)"
+    severity: CRITICAL
+    type: check_secrets_in_env
+    weight: 3
+    remediation: "Use Kubernetes Secrets with secretKeyRef to protect sensitive information and credentials."
+    category: "Access Control"
+    framework: SOC2
+    version: "1.0"
+  
+  - id: "soc2-cc7.5"
+    description: "Ensure containers use read-only root filesystem (SOC 2 CC7.5 - System Operations)"
+    severity: HIGH
+    type: check_readonly_root_filesystem
+    weight: 2
+    remediation: "Set securityContext.readOnlyRootFilesystem=true to prevent unauthorized system modifications."
+    category: "System Operations"
+    framework: SOC2
+    version: "1.0"
+
+metadata:
+  source: "SOC 2 Trust Services Criteria (AICPA)"
+  last_updated: "2024-01-01"
+  trust_services_criteria: ["CC6 - Logical and Physical Access Controls", "CC7 - System Operations"]

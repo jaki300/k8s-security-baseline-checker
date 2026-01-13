@@ -1,0 +1,110 @@
+id: pci-dss-kubernetes
+name: PCI-DSS Kubernetes Compliance Benchmark
+version: "1.0"
+description: Payment Card Industry Data Security Standard (PCI-DSS) compliance checks for Kubernetes
+framework: PCI-DSS
+checks:
+  - id: "pci-3.4"
+    description: "Ensure pods do not run as root (PCI-DSS Requirement 3.4)"
+    severity: CRITICAL
+    type: check_pods_nonroot
+    weight: 3
+    remediation: "Set securityContext.runAsNonRoot=true for all containers to protect cardholder data."
+    category: "Access Control"
+    framework: PCI-DSS
+    version: "1.0"
+  
+  - id: "pci-7.2"
+    description: "Ensure no privileged containers (PCI-DSS Requirement 7.2)"
+    severity: CRITICAL
+    type: check_pods_privileged
+    weight: 3
+    remediation: "Set securityContext.privileged=false to restrict access to cardholder data."
+    category: "Access Control"
+    framework: PCI-DSS
+    version: "1.0"
+  
+  - id: "pci-3.4.1"
+    description: "Ensure secrets are not exposed via environment variables (PCI-DSS Requirement 3.4)"
+    severity: CRITICAL
+    type: check_secrets_in_env
+    weight: 3
+    remediation: "Use Kubernetes Secrets with secretKeyRef instead of plain environment variables for cardholder data."
+    category: "Data Protection"
+    framework: PCI-DSS
+    version: "1.0"
+  
+  - id: "pci-7.1"
+    description: "Ensure RBAC is properly configured (PCI-DSS Requirement 7.1)"
+    severity: CRITICAL
+    type: check_rbac
+    weight: 3
+    remediation: "Implement least privilege access controls. Review and restrict RBAC permissions."
+    category: "Access Control"
+    framework: PCI-DSS
+    version: "1.0"
+  
+  - id: "pci-1.2"
+    description: "Ensure NetworkPolicies are configured (PCI-DSS Requirement 1.2)"
+    severity: HIGH
+    type: check_namespaces_networkpolicy
+    weight: 2
+    remediation: "Implement network segmentation using NetworkPolicies to isolate cardholder data environment."
+    category: "Network Security"
+    framework: PCI-DSS
+    version: "1.0"
+  
+  - id: "pci-2.1"
+    description: "Ensure containers do not allow privilege escalation (PCI-DSS Requirement 2.1)"
+    severity: CRITICAL
+    type: check_allow_privilege_escalation
+    weight: 3
+    remediation: "Set securityContext.allowPrivilegeEscalation=false to prevent unauthorized access."
+    category: "Access Control"
+    framework: PCI-DSS
+    version: "1.0"
+  
+  - id: "pci-3.5"
+    description: "Ensure resource limits are set (PCI-DSS Requirement 3.5)"
+    severity: HIGH
+    type: check_pods_resource_limits
+    weight: 2
+    remediation: "Define CPU/memory limits to prevent resource exhaustion attacks on cardholder data systems."
+    category: "Resource Management"
+    framework: PCI-DSS
+    version: "1.0"
+  
+  - id: "pci-8.1"
+    description: "Ensure default ServiceAccount is not used (PCI-DSS Requirement 8.1)"
+    severity: HIGH
+    type: check_pods_default_sa
+    weight: 2
+    remediation: "Use dedicated ServiceAccounts with least privilege for each application handling cardholder data."
+    category: "Access Control"
+    framework: PCI-DSS
+    version: "1.0"
+  
+  - id: "pci-2.2"
+    description: "Ensure containers drop unnecessary capabilities (PCI-DSS Requirement 2.2)"
+    severity: HIGH
+    type: check_capabilities
+    weight: 2
+    remediation: "Drop ALL capabilities and add only required ones to minimize attack surface."
+    category: "Access Control"
+    framework: PCI-DSS
+    version: "1.0"
+  
+  - id: "pci-10.1"
+    description: "Ensure containers have liveness probes (PCI-DSS Requirement 10.1)"
+    severity: MEDIUM
+    type: check_liveness_probe
+    weight: 1
+    remediation: "Configure liveness probes to ensure system availability and detect compromised containers."
+    category: "Monitoring"
+    framework: PCI-DSS
+    version: "1.0"
+
+metadata:
+  source: "PCI-DSS v3.2.1"
+  last_updated: "2024-01-01"
+  compliance_level: "Level 1"

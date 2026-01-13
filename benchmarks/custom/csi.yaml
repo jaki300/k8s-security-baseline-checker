@@ -1,0 +1,50 @@
+id: custom-csi
+name: Custom Container Security Initiative
+version: "1.0"
+description: Custom CSI benchmark for container security
+framework: Custom
+checks:
+  - id: "csi-1.1"
+    description: "Ensure pods do not run as root"
+    severity: CRITICAL
+    type: check_pods_nonroot
+    weight: 2
+    remediation: "Set securityContext.runAsNonRoot=true for all containers and avoid runAsUser=0."
+    category: "Container Security"
+    framework: Custom
+    version: "1.0"
+  
+  - id: "csi-1.2"
+    description: "Ensure no privileged containers"
+    severity: CRITICAL
+    type: check_pods_privileged
+    weight: 2
+    remediation: "Set securityContext.privileged=false in all pod/container specs."
+    category: "Container Security"
+    framework: Custom
+    version: "1.0"
+  
+  - id: "csi-2.1"
+    description: "Ensure resource limits are set for all containers"
+    severity: HIGH
+    type: check_pods_resource_limits
+    weight: 1
+    remediation: "Define CPU/memory requests and limits in pod specs."
+    category: "Resource Management"
+    framework: Custom
+    version: "1.0"
+  
+  - id: "csi-3.1"
+    description: "Ensure default ServiceAccount is not used"
+    severity: MEDIUM
+    type: check_pods_default_sa
+    weight: 1
+    remediation: "Use a dedicated ServiceAccount for each application."
+    category: "Service Account"
+    framework: Custom
+    version: "1.0"
+
+metadata:
+  source: "Custom CSI Framework"
+  last_updated: "2024-01-01"
+

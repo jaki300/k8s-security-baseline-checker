@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  k8s-checker-server:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile
+    image: k8s-checker:latest
+    container_name: k8s-checker-server
+    command: ["./k8s-checker-server", "--port", "8080"]
+    ports:
+      - "8080:8080"
+    volumes:
+      - ~/.kube:/root/.kube:ro
+      - ./config:/etc/k8s-checker:ro
+      - ./reports:/app/reports
+    environment:
+      - K8S_CHECKER_BENCHMARK_DIR=/app/benchmarks
+      - K8S_CHECKER_OUTPUT_DIR=/app/reports
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+

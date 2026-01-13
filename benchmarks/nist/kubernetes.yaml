@@ -1,0 +1,120 @@
+id: nist-kubernetes
+name: NIST Kubernetes Security Guidelines
+version: "1.0"
+description: NIST Security Guidelines for Kubernetes
+framework: NIST
+checks:
+  - id: "nist-1.1"
+    description: "Ensure pods do not run as root"
+    severity: CRITICAL
+    type: check_pods_nonroot
+    weight: 2
+    remediation: "Set securityContext.runAsNonRoot=true for all containers and avoid runAsUser=0."
+    category: "Access Control"
+    framework: NIST
+    version: "1.0"
+  
+  - id: "nist-1.2"
+    description: "Ensure no privileged containers"
+    severity: CRITICAL
+    type: check_pods_privileged
+    weight: 2
+    remediation: "Set securityContext.privileged=false in all pod/container specs."
+    category: "Access Control"
+    framework: NIST
+    version: "1.0"
+  
+  - id: "nist-2.1"
+    description: "Ensure resource limits are set for all containers"
+    severity: HIGH
+    type: check_pods_resource_limits
+    weight: 1
+    remediation: "Define CPU/memory requests and limits in pod specs."
+    category: "Resource Management"
+    framework: NIST
+    version: "1.0"
+  
+  - id: "nist-3.1"
+    description: "Ensure all namespaces have NetworkPolicies"
+    severity: HIGH
+    type: check_namespaces_networkpolicy
+    weight: 1
+    remediation: "Create default-deny NetworkPolicies for all namespaces."
+    category: "Network Security"
+    framework: NIST
+    version: "1.0"
+  
+  - id: "nist-4.1"
+    description: "Ensure cluster-admin roles do not have wildcard privileges"
+    severity: CRITICAL
+    type: check_clusterrole_wildcard
+    weight: 2
+    remediation: "Avoid giving '*' verbs/resources to cluster-admin or any other roles."
+    category: "Access Control"
+    framework: NIST
+    version: "1.0"
+  
+  - id: "nist-5.1"
+    description: "Ensure containers do not allow privilege escalation"
+    severity: CRITICAL
+    type: check_allow_privilege_escalation
+    weight: 2
+    remediation: "Set securityContext.allowPrivilegeEscalation=false to prevent unauthorized access."
+    category: "Access Control"
+    framework: NIST
+    version: "1.0"
+  
+  - id: "nist-5.2"
+    description: "Ensure containers use read-only root filesystem"
+    severity: HIGH
+    type: check_readonly_root_filesystem
+    weight: 1
+    remediation: "Set securityContext.readOnlyRootFilesystem=true to prevent unauthorized modifications."
+    category: "System Integrity"
+    framework: NIST
+    version: "1.0"
+  
+  - id: "nist-5.3"
+    description: "Ensure containers drop unnecessary capabilities"
+    severity: HIGH
+    type: check_capabilities
+    weight: 1
+    remediation: "Drop ALL capabilities and add only required ones to minimize attack surface."
+    category: "Access Control"
+    framework: NIST
+    version: "1.0"
+  
+  - id: "nist-3.2"
+    description: "Ensure secrets are not exposed via environment variables"
+    severity: CRITICAL
+    type: check_secrets_in_env
+    weight: 2
+    remediation: "Use Kubernetes Secrets with secretKeyRef to protect sensitive information."
+    category: "Data Protection"
+    framework: NIST
+    version: "1.0"
+  
+  - id: "nist-6.1"
+    description: "Ensure containers have liveness probes configured"
+    severity: MEDIUM
+    type: check_liveness_probe
+    weight: 1
+    remediation: "Configure liveness probes to ensure system availability and detect compromised containers."
+    category: "System Monitoring"
+    framework: NIST
+    version: "1.0"
+  
+  - id: "nist-6.2"
+    description: "Ensure containers have readiness probes configured"
+    severity: MEDIUM
+    type: check_readiness_probe
+    weight: 1
+    remediation: "Configure readiness probes to ensure proper system operations."
+    category: "System Monitoring"
+    framework: NIST
+    version: "1.0"
+
+metadata:
+  source: "NIST Cybersecurity Framework (CSF) and NIST SP 800-53"
+  last_updated: "2024-01-01"
+

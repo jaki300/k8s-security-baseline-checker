@@ -1,0 +1,331 @@
+id: cis-kubernetes
+name: CIS Kubernetes Benchmark
+version: "1.0"
+description: Center for Internet Security Kubernetes Benchmark
+framework: CIS
+checks:
+  - id: "2.1.1"
+    description: "Ensure pods do not run as root"
+    severity: CRITICAL
+    type: check_pods_nonroot
+    weight: 2
+    remediation: "Set securityContext.runAsNonRoot=true for all containers and avoid runAsUser=0."
+    category: "Pod Security"
+    framework: CIS
+    version: "1.0"
+  
+  - id: "2.1.2"
+    description: "Ensure no privileged containers"
+    severity: CRITICAL
+    type: check_pods_privileged
+    weight: 2
+    remediation: "Set securityContext.privileged=false in all pod/container specs."
+    category: "Pod Security"
+    framework: CIS
+    version: "1.0"
+  
+  - id: "2.1.3"
+    description: "Ensure no hostPath volumes"
+    severity: CRITICAL
+    type: check_pods_hostpath
+    weight: 1
+    remediation: "Avoid using hostPath volumes unless absolutely necessary."
+    category: "Pod Security"
+    framework: CIS
+    version: "1.0"
+  
+  - id: "2.2.1"
+    description: "Ensure resource limits are set for all containers"
+    severity: WARN
+    type: check_pods_resource_limits
+    weight: 1
+    remediation: "Define CPU/memory requests and limits in pod specs."
+    category: "Resource Management"
+    framework: CIS
+    version: "1.0"
+  
+  - id: "2.2.2"
+    description: "Ensure default ServiceAccount is not used"
+    severity: WARN
+    type: check_pods_default_sa
+    weight: 1
+    remediation: "Use a dedicated ServiceAccount for each application."
+    category: "Service Account"
+    framework: CIS
+    version: "1.0"
+  
+  - id: "4.1.1"
+    description: "Ensure all namespaces have NetworkPolicies"
+    severity: HIGH
+    type: check_namespace_isolation
+    weight: 2
+    remediation: "Create default-deny NetworkPolicies for all namespaces. Also configure ResourceQuotas and LimitRanges for proper namespace isolation."
+    category: "Network Security"
+    framework: CIS
+    version: "1.8"
+  
+  - id: "4.1.2"
+    description: "Ensure that all pods have Network Policies defined"
+    severity: HIGH
+    type: check_networkpolicy_coverage
+    weight: 2
+    remediation: "Create NetworkPolicies to cover all pods in the cluster. Ensure podSelector matches pod labels."
+    category: "Network Security"
+    framework: CIS
+    version: "1.8"
+  
+  - id: "4.2.1"
+    description: "Ensure that namespaces are created with ResourceQuotas and LimitRanges"
+    severity: MEDIUM
+    type: check_namespace_isolation
+    weight: 1
+    remediation: "Create ResourceQuotas and LimitRanges for all namespaces to prevent resource exhaustion."
+    category: "Network Security"
+    framework: CIS
+    version: "1.8"
+  
+  - id: "1.1.1"
+    description: "Ensure cluster-admin roles do not have wildcard privileges"
+    severity: CRITICAL
+    type: check_rbac_advanced
+    weight: 2
+    remediation: "Avoid giving '*' verbs/resources to cluster-admin or any other roles. Review all ClusterRoles and Roles for wildcard privileges."
+    category: "RBAC"
+    framework: CIS
+    version: "1.8"
+  
+  - id: "1.1.8"
+    description: "Ensure that Service Account Tokens are only mounted where necessary"
+    severity: HIGH
+    type: check_serviceaccount_permissions
+    weight: 2
+    remediation: "Review ServiceAccount bindings and remove cluster-admin bindings. Use least privilege roles for ServiceAccounts."
+    category: "RBAC"
+    framework: CIS
+    version: "1.8"
+  
+  - id: "1.1.20"
+    description: "Ensure that the --encryption-provider-config argument is set as appropriate"
+    severity: CRITICAL
+    type: check_etcd_encryption
+    weight: 3
+    remediation: "Configure etcd encryption at rest using --encryption-provider-config flag. See: https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/"
+    category: "Control Plane - API Server"
+    framework: CIS
+    version: "1.8"
+  
+  - id: "1.2.1"
+    description: "Ensure that the --anonymous-auth argument is set to false"
+    severity: CRITICAL
+    type: check_apiserver_flags
+    weight: 3
+    remediation: "Edit the API server pod specification file and set --anonymous-auth=false"
+    category: "Control Plane - API Server"
+    framework: CIS
+    version: "1.8"
+  
+  - id: "1.2.2"
+    description: "Ensure that the --authorization-mode argument is not set to AlwaysAllow"
+    severity: CRITICAL
+    type: check_apiserver_flags
+    weight: 3
+    remediation: "Edit the API server pod specification file and set --authorization-mode to Node,RBAC"
+    category: "Control Plane - API Server"
+    framework: CIS
+    version: "1.8"
+  
+  - id: "1.2.3"
+    description: "Ensure that the --authorization-mode argument includes Node"
+    severity: CRITICAL
+    type: check_apiserver_flags
+    weight: 3
+    remediation: "Edit the API server pod specification file and ensure --authorization-mode includes Node"
+    category: "Control Plane - API Server"
+    framework: CIS
+    version: "1.8"
+  
+  - id: "1.2.4"
+    description: "Ensure that the --authorization-mode argument includes RBAC"
+    severity: CRITICAL
+    type: check_apiserver_flags
+    weight: 3
+    remediation: "Edit the API server pod specification file and ensure --authorization-mode includes RBAC"
+    category: "Control Plane - API Server"
+    framework: CIS
+    version: "1.8"
+  
+  - id: "1.2.5"
+    description: "Ensure that the --audit-log-maxage argument is set to 30 or as appropriate"
+    severity: HIGH
+    type: check_apiserver_flags
+    weight: 2
+    remediation: "Edit the API server pod specification file and set --audit-log-maxage=30"
+    category: "Control Plane - API Server"
+    framework: CIS
+    version: "1.8"
+  
+  - id: "1.2.6"
+    description: "Ensure that the --audit-log-maxbackup argument is set to 10 or as appropriate"
+    severity: HIGH
+    type: check_apiserver_flags
+    weight: 2
+    remediation: "Edit the API server pod specification file and set --audit-log-maxbackup=10"
+    category: "Control Plane - API Server"
+    framework: CIS
+    version: "1.8"
+  
+  - id: "1.2.7"
+    description: "Ensure that the --audit-log-maxsize argument is set to 100 or as appropriate"
+    severity: HIGH
+    type: check_apiserver_flags
+    weight: 2
+    remediation: "Edit the API server pod specification file and set --audit-log-maxsize=100"
+    category: "Control Plane - API Server"
+    framework: CIS
+    version: "1.8"
+  
+  - id: "1.2.8"
+    description: "Ensure that the --request-timeout argument is set as appropriate"
+    severity: MEDIUM
+    type: check_apiserver_flags
+    weight: 1
+    remediation: "Edit the API server pod specification file and set --request-timeout=300s"
+    category: "Control Plane - API Server"
+    framework: CIS
+    version: "1.8"
+  
+  - id: "1.2.9"
+    description: "Ensure that the --service-account-lookup argument is set to true"
+    severity: HIGH
+    type: check_apiserver_flags
+    weight: 2
+    remediation: "Edit the API server pod specification file and set --service-account-lookup=true"
+    category: "Control Plane - API Server"
+    framework: CIS
+    version: "1.8"
+  
+  - id: "1.2.10"
+    description: "Ensure that the --enable-bootstrap-token-auth argument is set to false"
+    severity: HIGH
+    type: check_apiserver_flags
+    weight: 2
+    remediation: "Edit the API server pod specification file and set --enable-bootstrap-token-auth=false"
+    category: "Control Plane - API Server"
+    framework: CIS
+    version: "1.8"
+  
+  - id: "1.2.11"
+    description: "Ensure that the --tls-cipher-suites argument is set to strong cipher suites"
+    severity: HIGH
+    type: check_apiserver_flags
+    weight: 2
+    remediation: "Edit the API server pod specification file and set --tls-cipher-suites to strong cipher suites"
+    category: "Control Plane - API Server"
+    framework: CIS
+    version: "1.8"
+  
+  - id: "1.2.12"
+    description: "Ensure that the --tls-min-version argument is set to VersionTLS12 or higher"
+    severity: HIGH
+    type: check_apiserver_flags
+    weight: 2
+    remediation: "Edit the API server pod specification file and set --tls-min-version=VersionTLS12"
+    category: "Control Plane - API Server"
+    framework: CIS
+    version: "1.8"
+  
+  - id: "2.1.4"
+    description: "Ensure containers use appropriate image pull policy"
+    severity: MEDIUM
+    type: check_image_pull_policy
+    weight: 1
+    remediation: "Set imagePullPolicy to 'IfNotPresent' or 'Never' instead of 'Always' to prevent unnecessary image pulls."
+    category: "Pod Security"
+    framework: CIS
+    version: "1.0"
+  
+  - id: "2.1.5"
+    description: "Ensure containers use read-only root filesystem"
+    severity: HIGH
+    type: check_readonly_root_filesystem
+    weight: 1
+    remediation: "Set securityContext.readOnlyRootFilesystem=true for all containers."
+    category: "Pod Security"
+    framework: CIS
+    version: "1.0"
+  
+  - id: "2.1.6"
+    description: "Ensure containers drop unnecessary capabilities"
+    severity: HIGH
+    type: check_capabilities
+    weight: 1
+    remediation: "Drop ALL capabilities and add only required ones. Avoid adding dangerous capabilities like SYS_ADMIN, NET_ADMIN."
+    category: "Pod Security"
+    framework: CIS
+    version: "1.0"
+  
+  - id: "2.1.7"
+    description: "Ensure secrets are not exposed via environment variables"
+    severity: CRITICAL
+    type: check_secrets_in_env
+    weight: 2
+    remediation: "Use secretKeyRef or mounted secrets instead of plain environment variables for sensitive data."
+    category: "Secrets Management"
+    framework: CIS
+    version: "1.0"
+  
+  - id: "2.1.8"
+    description: "Ensure containers do not allow privilege escalation"
+    severity: CRITICAL
+    type: check_allow_privilege_escalation
+    weight: 2
+    remediation: "Set securityContext.allowPrivilegeEscalation=false for all containers."
+    category: "Pod Security"
+    framework: CIS
+    version: "1.0"
+  
+  - id: "2.2.3"
+    description: "Ensure containers have liveness probes configured"
+    severity: MEDIUM
+    type: check_liveness_probe
+    weight: 1
+    remediation: "Configure livenessProbe for all containers to detect and restart unhealthy containers."
+    category: "Resource Management"
+    framework: CIS
+    version: "1.0"
+  
+  - id: "2.2.4"
+    description: "Ensure containers have readiness probes configured"
+    severity: MEDIUM
+    type: check_readiness_probe
+    weight: 1
+    remediation: "Configure readinessProbe for all containers to ensure traffic is only sent to ready pods."
+    category: "Resource Management"
+    framework: CIS
+    version: "1.0"
+
+  - id: "5.2.1"
+    description: "Ensure that Namespaces are created with Pod Security Standards enabled"
+    severity: HIGH
+    type: check_pod_security_standards
+    weight: 2
+    remediation: "Add pod-security.kubernetes.io/enforce label to namespaces with value 'restricted' or 'baseline'. Example: kubectl label namespace <namespace> pod-security.kubernetes.io/enforce=restricted"
+    category: "Pod Security Standards"
+    framework: CIS
+    version: "1.8"
+  
+  - id: "5.2.2"
+    description: "Ensure that Pod Security Standards are enforced"
+    severity: HIGH
+    type: check_pod_security_policy
+    weight: 2
+    remediation: "Ensure Pod Security Standards are properly configured and enforced. Pods should not run as root, use privileged mode, or allow privilege escalation."
+    category: "Pod Security Standards"
+    framework: CIS
+    version: "1.8"
+
+metadata:
+  source: "CIS Kubernetes Benchmark v1.8"
+  last_updated: "2024-01-01"
+  version: "1.8"
+

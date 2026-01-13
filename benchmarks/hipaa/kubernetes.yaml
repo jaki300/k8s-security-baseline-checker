@@ -1,0 +1,120 @@
+id: hipaa-kubernetes
+name: HIPAA Kubernetes Compliance Benchmark
+version: "1.0"
+description: Health Insurance Portability and Accountability Act (HIPAA) compliance checks for Kubernetes
+framework: HIPAA
+checks:
+  - id: "hipaa-164.308"
+    description: "Ensure pods do not run as root (HIPAA §164.308(a)(3))"
+    severity: CRITICAL
+    type: check_pods_nonroot
+    weight: 3
+    remediation: "Set securityContext.runAsNonRoot=true to protect Protected Health Information (PHI)."
+    category: "Access Control"
+    framework: HIPAA
+    version: "1.0"
+  
+  - id: "hipaa-164.312"
+    description: "Ensure no privileged containers (HIPAA §164.312(a)(1))"
+    severity: CRITICAL
+    type: check_pods_privileged
+    weight: 3
+    remediation: "Set securityContext.privileged=false to restrict access to PHI."
+    category: "Access Control"
+    framework: HIPAA
+    version: "1.0"
+  
+  - id: "hipaa-164.312.1"
+    description: "Ensure secrets are not exposed via environment variables (HIPAA §164.312(e)(1))"
+    severity: CRITICAL
+    type: check_secrets_in_env
+    weight: 3
+    remediation: "Use Kubernetes Secrets with secretKeyRef to encrypt PHI at rest and in transit."
+    category: "Encryption"
+    framework: HIPAA
+    version: "1.0"
+  
+  - id: "hipaa-164.308.1"
+    description: "Ensure RBAC is properly configured (HIPAA §164.308(a)(3)(i))"
+    severity: CRITICAL
+    type: check_rbac
+    weight: 3
+    remediation: "Implement role-based access controls to ensure only authorized personnel access PHI."
+    category: "Access Control"
+    framework: HIPAA
+    version: "1.0"
+  
+  - id: "hipaa-164.312.2"
+    description: "Ensure NetworkPolicies are configured (HIPAA §164.312(e)(2)(i))"
+    severity: HIGH
+    type: check_namespaces_networkpolicy
+    weight: 2
+    remediation: "Implement network segmentation to isolate systems containing PHI."
+    category: "Network Security"
+    framework: HIPAA
+    version: "1.0"
+  
+  - id: "hipaa-164.312.3"
+    description: "Ensure containers do not allow privilege escalation (HIPAA §164.312(a)(2)(i))"
+    severity: CRITICAL
+    type: check_allow_privilege_escalation
+    weight: 3
+    remediation: "Set securityContext.allowPrivilegeEscalation=false to prevent unauthorized access to PHI."
+    category: "Access Control"
+    framework: HIPAA
+    version: "1.0"
+  
+  - id: "hipaa-164.308.2"
+    description: "Ensure resource limits are set (HIPAA §164.308(a)(7)(ii)(C))"
+    severity: HIGH
+    type: check_pods_resource_limits
+    weight: 2
+    remediation: "Define resource limits to ensure system availability and protect PHI."
+    category: "Resource Management"
+    framework: HIPAA
+    version: "1.0"
+  
+  - id: "hipaa-164.308.3"
+    description: "Ensure default ServiceAccount is not used (HIPAA §164.308(a)(3)(ii)(A))"
+    severity: HIGH
+    type: check_pods_default_sa
+    weight: 2
+    remediation: "Use dedicated ServiceAccounts with unique identifiers for each application handling PHI."
+    category: "Access Control"
+    framework: HIPAA
+    version: "1.0"
+  
+  - id: "hipaa-164.312.4"
+    description: "Ensure containers use read-only root filesystem (HIPAA §164.312(e)(2)(ii))"
+    severity: HIGH
+    type: check_readonly_root_filesystem
+    weight: 2
+    remediation: "Set securityContext.readOnlyRootFilesystem=true to prevent unauthorized modification of PHI."
+    category: "Data Integrity"
+    framework: HIPAA
+    version: "1.0"
+  
+  - id: "hipaa-164.312.5"
+    description: "Ensure containers drop unnecessary capabilities (HIPAA §164.312(a)(2)(ii))"
+    severity: HIGH
+    type: check_capabilities
+    weight: 2
+    remediation: "Drop ALL capabilities to minimize risk of unauthorized access to PHI."
+    category: "Access Control"
+    framework: HIPAA
+    version: "1.0"
+  
+  - id: "hipaa-164.308.4"
+    description: "Ensure containers have liveness probes (HIPAA §164.308(a)(7)(ii)(B))"
+    severity: MEDIUM
+    type: check_liveness_probe
+    weight: 1
+    remediation: "Configure liveness probes to ensure system availability for PHI access."
+    category: "Monitoring"
+    framework: HIPAA
+    version: "1.0"
+
+metadata:
+  source: "HIPAA Security Rule (45 CFR Parts 160 and 164)"
+  last_updated: "2024-01-01"
+  compliance_type: "Technical Safeguards"

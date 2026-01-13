@@ -1,0 +1,80 @@
+framework: NIST
+version: "800-53 Rev 5"
+metadata:
+  name: "NIST SP 800-53 Rev 5"
+  description: "Security and Privacy Controls for Information Systems and Organizations"
+  scoring:
+    method: weighted_average
+    weighted_by_category: true
+    minimum_compliance_score: 80.0
+    category_weights:
+      "Access Control": 1.5
+      "System and Communications Protection": 1.3
+      "Configuration Management": 1.2
+      "Audit and Accountability": 1.0
+
+# Many-to-many mappings: One control can map to multiple checks, one check can map to multiple controls
+mappings:
+  # AC-3 maps to multiple checks (many checks -> one control)
+  - control_id: "AC-3"
+    control_name: "Access Enforcement"
+    description: "The information system enforces assigned authorizations for controlling access to information and system resources in accordance with applicable policy."
+    category: "Access Control"
+    check_ids:
+      - "cis-1.1.1"  # RBAC wildcard check
+      - "cis-2.1.1"  # Pods non-root check
+      - "cis-2.1.2"  # Privileged containers check
+    weight: 1.5
+    mapping_rule:
+      pass_status: COMPLIANT
+      fail_status: NON_COMPLIANT
+      warn_status: PARTIAL
+      requires_evidence: true
+
+  # AC-6 maps to multiple checks
+  - control_id: "AC-6"
+    control_name: "Least Privilege"
+    description: "The organization employs the principle of least privilege, allowing only authorized accesses for users (and processes acting on behalf of users) which are necessary to accomplish assigned tasks."
+    category: "Access Control"
+    check_ids:
+      - "cis-2.1.2"  # Privileged containers
+      - "cis-2.1.3"  # HostPath volumes
+      - "cis-2.1.8"  # Privilege escalation
+    weight: 1.5
+    mapping_rule:
+      pass_status: COMPLIANT
+      fail_status: NON_COMPLIANT
+      warn_status: PARTIAL
+      requires_evidence: true
+
+  # SC-7 maps to network security checks
+  - control_id: "SC-7"
+    control_name: "Boundary Protection"
+    description: "The information system monitors and controls communications at the external boundary and key internal boundaries."
+    category: "System and Communications Protection"
+    check_ids:
+      - "cis-4.1.1"  # NetworkPolicies
+    weight: 1.3
+    mapping_rule:
+      pass_status: COMPLIANT
+      fail_status: NON_COMPLIANT
+      warn_status: PARTIAL
+      requires_evidence: true
+
+  # CM-7 maps to configuration checks
+  - control_id: "CM-7"
+    control_name: "Least Functionality"
+    description: "The organization configures the information system to provide only essential capabilities and prohibits or restricts the use of functions, ports, protocols, and/or services."
+    category: "Configuration Management"
+    check_ids:
+      - "cis-2.2.1"  # Resource limits
+      - "cis-2.1.6"  # Capabilities
+    weight: 1.2
+    mapping_rule:
+      pass_status: COMPLIANT
+      fail_status: NON_COMPLIANT
+      warn_status: PARTIAL
+      requires_evidence: true
+
+  # Note: cis-2.1.1 maps to multiple controls (one check -> many controls)
+  # This demonstrates the many-to-many relationship
