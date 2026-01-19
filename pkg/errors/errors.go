@@ -64,6 +64,9 @@ func (e *AppError) Error() string {
 	if e.InternalMessage != "" {
 		return fmt.Sprintf("[%s] %s: %s", e.Code, e.Message, e.InternalMessage)
 	}
+	if e.Cause != nil {
+		return fmt.Sprintf("[%s] %s: %v", e.Code, e.Message, e.Cause)
+	}
 	return fmt.Sprintf("[%s] %s", e.Code, e.Message)
 }
 
